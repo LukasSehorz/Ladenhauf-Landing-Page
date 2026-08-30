@@ -1,1 +1,6 @@
 .DS_Store
+
+# Roh-Download des Team-Videos von YouTube (1080p, ~83 MB).
+# Dient nur als Quelle fuer den Web-Encode und wird nicht ausgeliefert.
+# Ausgeliefert wird video/kurmittelhaus-team-720p.mp4 (~29 MB).
+video/kurmittelhaus-team.mp4

@@ -233,7 +233,7 @@ p{ overflow-wrap:break-word; }
 /* unter 360px muss die Zeile brechen dürfen, sonst Overflow */
 @media (min-width:360px){ .nowrap-sm{ white-space:nowrap; } }
 
-/* --- Video-Platzhalter --- */
+/* --- Hero-Video --- */
 .video-frame{
   position:relative;
   max-width:880px; margin:clamp(32px, 6vw, 64px) auto 0;
@@ -253,11 +253,26 @@ p{ overflow-wrap:break-word; }
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:clamp(14px, 2.4vw, 22px);
   text-align:center; padding:var(--s3);
+  cursor:pointer;
+}
+.video-stage picture{ display:contents; }
+.video-stage__poster{
+  position:absolute; inset:0; z-index:0;
+  width:100%; height:100%; object-fit:cover;
+}
+/* Scrim: hält Play-Button und Bildunterschrift auf dem Foto lesbar */
+.video-stage::before{
+  content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:linear-gradient(180deg,
+    rgba(0,20,40,.16) 0%, rgba(0,20,40,.24) 38%,
+    rgba(0,20,40,.50) 70%, rgba(0,20,40,.82) 100%);
 }
 .video-stage::after{
   content:""; position:absolute; inset:0; pointer-events:none;
   border-radius:inherit; box-shadow:inset 0 0 0 1px rgba(255,255,255,.10);
 }
+.video-stage:hover .play{ transform:scale(1.06); box-shadow:0 14px 34px rgba(0,10,25,.5), 0 3px 8px rgba(0,10,25,.34); }
+.video-stage:active .play{ transform:scale(1); }
 .play{
   position:relative; z-index:1; flex:none;
   width:clamp(72px, 9vw, 104px); height:clamp(72px, 9vw, 104px);
@@ -284,24 +299,38 @@ p{ overflow-wrap:break-word; }
   70%  { transform:scale(1.55); opacity:0; }
   100% { transform:scale(1.55); opacity:0; }
 }
-.video-caption{ position:relative; z-index:1; }
+/* Unterschrift sitzt am unteren Rand, wo der Scrim am dunkelsten ist */
+.video-caption{
+  position:absolute; z-index:1;
+  left:var(--s3); right:var(--s3); bottom:clamp(14px, 2.2vw, 20px);
+}
 .video-caption strong{
   display:block; font-family:var(--font-h); font-weight:600;
   font-size:clamp(.9375rem, 1.9vw, 1.125rem); letter-spacing:-0.01em; color:#fff;
+  text-shadow:0 1px 3px rgba(0,15,30,.5);
+  /* eine Zeile bleiben — umbrochen liefe der Titel sonst in den Play-Button */
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .video-caption span{
   display:inline-block; margin-top:8px;
   padding:4px 12px; border-radius:999px;
-  background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.26);
-  font-size:.75rem; font-weight:600; letter-spacing:.04em; color:rgba(255,255,255,.88);
+  background:rgba(0,20,40,.34); border:1px solid rgba(255,255,255,.32);
+  backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  font-size:.75rem; font-weight:600; letter-spacing:.04em; color:rgba(255,255,255,.92);
 }
 .video-media{ width:100%; aspect-ratio:16/9; border:0; border-radius:var(--r-lg); background:#000; }
 @media (max-width:540px){
   .video-stage{ padding:14px; gap:10px; }
   .play{ width:64px; height:64px; }
   .play svg{ width:24px; height:24px; margin-left:3px; }
+  .video-caption{ left:var(--s1); right:var(--s1); bottom:10px; }
   .video-caption strong{ font-size:.8125rem; }
   .video-caption span{ margin-top:6px; padding:3px 10px; font-size:.6875rem; }
+}
+/* Unter ~380px ist die Bühne so flach, dass der Titel den Play-Button berührt.
+   Die Pille allein trägt den Hinweis; der Titel steht ohnehin in der Überschrift. */
+@media (max-width:379px){
+  .video-caption strong{ display:none; }
 }
 
 .hero__cta{ margin-top:clamp(26px, 4.5vw, 48px); }
@@ -733,29 +762,21 @@ p{ overflow-wrap:break-word; }
         Dokumentationszeit. 15 Therapeut:innen im Berchtesgadener Land.
       </p>
 
-      <!-- VIDEO: hier später <video> oder YouTube/Vimeo <iframe> einsetzen -->
-      <!-- TODO Video einbetten. Vorgehen: den Block ".video-stage" unten löschen und stattdessen
-           eine der beiden folgenden Zeilen einkommentieren (Klasse "video-media" beibehalten):
-
-           <video class="video-media" controls playsinline preload="metadata" poster="video-poster.jpg">
-             <source src="videobotschaft.mp4" type="video/mp4">
-             <source src="videobotschaft.webm" type="video/webm">
-             Dein Browser kann dieses Video leider nicht abspielen.
-           </video>
-
-           <iframe class="video-media" src="https://www.youtube-nocookie.com/embed/VIDEO_ID?rel=0"
-                   title="Videobotschaft der Geschäftsführung" loading="lazy"
-                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                   allowfullscreen></iframe>
-      -->
+      <!-- VIDEO: Poster-Vorschau, das MP4 lädt erst beim Klick (siehe Skript unten) -->
       <div class="video-frame reveal" data-reveal>
-        <div class="video-stage">
-          <button type="button" class="play" id="play-btn" aria-label="Videobotschaft abspielen" aria-describedby="video-status">
+        <div class="video-stage" id="video-stage">
+          <picture>
+            <source srcset="video/kurmittelhaus-team-poster.webp" type="image/webp">
+            <img class="video-stage__poster" src="video/kurmittelhaus-team-poster.jpg"
+                 alt="Therapeutin des Kurmittelhauses der Moderne in einem Behandlungsraum"
+                 width="1600" height="900" fetchpriority="high" decoding="async">
+          </picture>
+          <button type="button" class="play" id="play-btn" aria-label="Video abspielen: Komm in unser Kurmittelhaus-Team" aria-describedby="video-status">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72a1 1 0 0 0 1.52.85l11.14-6.86a1 1 0 0 0 0-1.7L9.52 4.29A1 1 0 0 0 8 5.14z"/></svg>
           </button>
           <span class="video-caption">
-            <strong>Videobotschaft der Geschäftsführung</strong>
-            <span id="video-status">Platzhalter — Video folgt</span>
+            <strong>Komm in unser Kurmittelhaus-Team</strong>
+            <span id="video-status">Video ansehen · 3:24 Min.</span>
           </span>
         </div>
       </div>
@@ -1232,18 +1253,24 @@ p{ overflow-wrap:break-word; }
     revealEls.forEach(function (el) { io.observe(el); });
   }
 
-  /* ---------- Play-Button (Platzhalter) ----------
-     Solange kein Video eingebettet ist, führt der Klick zum Formular statt ins Leere.
-     TODO: Nach dem Einbetten des Videos diesen Block ersatzlos entfernen. */
-  const playBtn = document.getElementById('play-btn');
-  if (playBtn) {
-    playBtn.addEventListener('click', function () {
-      const target = document.getElementById('bewerbung');
-      if (!target) return;
-      try { target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' }); }
-      catch (e) { target.scrollIntoView(); }
-      const first = document.getElementById('vorname');
-      if (first) window.setTimeout(function () { first.focus({ preventScroll: true }); }, reduceMotion ? 0 : 600);
+  /* ---------- Hero-Video ----------
+     Bis zum Klick liegt nur das Poster-Bild auf der Seite. Erst der Klick tauscht die
+     Vorschau gegen das <video> — so bleibt der Seitenaufbau leicht, auch mobil. */
+  const stage = document.getElementById('video-stage');
+  if (stage) {
+    stage.addEventListener('click', function () {
+      const video = document.createElement('video');
+      video.className = 'video-media';
+      video.src = 'video/kurmittelhaus-team-720p.mp4';
+      video.poster = 'video/kurmittelhaus-team-poster.jpg';
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = 'auto';
+      video.setAttribute('title', 'Komm in unser Kurmittelhaus-Team in Bad Reichenhall');
+      stage.replaceWith(video);
+      const started = video.play();
+      if (started && typeof started.catch === 'function') { started.catch(function () {}); }
+      try { video.focus({ preventScroll: true }); } catch (e) {}
     });
   }
 
