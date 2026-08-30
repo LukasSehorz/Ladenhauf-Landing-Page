@@ -13,11 +13,37 @@
 <meta property="og:description" content="Feste Pufferzeiten, bezahlte Dokumentationszeit, Reha- und Rezeptbereich, 4-Tage-Woche möglich. Ergotherapeut:in (m/w/d) in Bad Reichenhall gesucht.">
 <meta property="og:site_name" content="Kurmittelhaus der Moderne">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/lexend-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/open-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
 
 <style>
+/* ============================================================
+   SCHRIFTEN — selbst gehostet
+   Über Google Fonts eingebunden würde bei jedem Seitenaufruf die
+   IP-Adresse der Besucher an Google übertragen. Beide Familien sind
+   Variable Fonts, eine Datei deckt daher alle Schnitte ab.
+   ============================================================ */
+@font-face{
+  font-family:'Lexend'; font-style:normal; font-weight:500 700; font-display:swap;
+  src:url(fonts/lexend-latin.woff2) format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family:'Lexend'; font-style:normal; font-weight:500 700; font-display:swap;
+  src:url(fonts/lexend-latin-ext.woff2) format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family:'Open Sans'; font-style:normal; font-weight:400 700; font-display:swap;
+  src:url(fonts/open-sans-latin.woff2) format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family:'Open Sans'; font-style:normal; font-weight:400 700; font-display:swap;
+  src:url(fonts/open-sans-latin-ext.woff2) format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 /* ============================================================
    TOKENS
    ============================================================ */
@@ -1224,8 +1250,8 @@ p{ overflow-wrap:break-word; }
               <div class="field consent" id="f-datenschutz">
                 <div class="consent__row">
                   <input type="checkbox" id="datenschutz" name="datenschutz" required aria-describedby="e-datenschutz">
-                  <!-- TODO: echte Datenschutz-URL eintragen. target="_blank" ist Absicht: der Nutzer darf das Formular nie verlassen. -->
-                  <label for="datenschutz">Ich habe die <a href="/datenschutz" target="_blank" rel="noopener">Datenschutzhinweise</a> gelesen und bin mit der Verarbeitung meiner Daten zum Zweck der Bewerbung einverstanden. <span class="req-star" aria-hidden="true">*</span></label>
+                  <!-- target="_blank" ist Absicht, damit niemand das ausgefüllte Formular verlässt. -->
+                  <label for="datenschutz">Ich habe die <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutzhinweise</a> gelesen und bin mit der Verarbeitung meiner Daten zum Zweck der Bewerbung einverstanden. <span class="req-star" aria-hidden="true">*</span></label>
                 </div>
                 <p class="err" id="e-datenschutz" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg><span class="err-msg"></span></p>
               </div>
@@ -1263,8 +1289,8 @@ p{ overflow-wrap:break-word; }
     <p>Kurmittelhaus der Moderne · Salzburger Straße 7 · 83435 Bad Reichenhall · Tel. <a href="tel:+498651762330">08651 762330</a></p>
     <nav aria-label="Rechtliches">
       <!-- TODO: echte URLs eintragen -->
-      <a href="/impressum" target="_blank" rel="noopener">Impressum</a>
-      <a href="/datenschutz" target="_blank" rel="noopener">Datenschutz</a>
+      <a href="impressum.html">Impressum</a>
+      <a href="datenschutz.html">Datenschutz</a>
     </nav>
   </div>
 </footer>

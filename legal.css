@@ -1,0 +1,171 @@
+/* ============================================================
+   Rechtsseiten (Impressum, Datenschutz)
+   Farben und Schriften sind identisch mit index.html, damit die
+   Seiten nicht wie ein Fremdkörper neben der Landing Page wirken.
+   ============================================================ */
+
+/* --- Schriften, selbst gehostet (siehe Kommentar in index.html) --- */
+@font-face{
+  font-family:'Lexend'; font-style:normal; font-weight:500 700; font-display:swap;
+  src:url(fonts/lexend-latin.woff2) format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family:'Lexend'; font-style:normal; font-weight:500 700; font-display:swap;
+  src:url(fonts/lexend-latin-ext.woff2) format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face{
+  font-family:'Open Sans'; font-style:normal; font-weight:400 700; font-display:swap;
+  src:url(fonts/open-sans-latin.woff2) format('woff2');
+  unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face{
+  font-family:'Open Sans'; font-style:normal; font-weight:400 700; font-display:swap;
+  src:url(fonts/open-sans-latin-ext.woff2) format('woff2');
+  unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root{
+  --wine:#7F191C;
+  --wine-900:#5C1114;
+  --forest-900:#17330F;
+  --forest:#295F21;
+  --ink:#1A1714;
+  --ink-600:#5C554A;
+  --line:#E7E2D5;
+  --surface:#FAF7F0;
+  --tint:#EDF4D9;
+
+  --s1:8px; --s2:16px; --s3:24px; --s4:32px; --s5:48px; --s6:64px;
+  --r-sm:10px; --r-lg:16px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --dur:200ms;
+  --font-h:'Lexend','Open Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font-b:'Open Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --gutter:20px;
+}
+@media (min-width:600px){ :root{ --gutter:24px; } }
+@media (min-width:1000px){ :root{ --gutter:32px; } }
+
+*,*::before,*::after{ box-sizing:border-box; }
+html{ color-scheme:light; -webkit-text-size-adjust:100%; }
+body,h1,h2,h3,p,ul,ol,li,dl,dt,dd{ margin:0; padding:0; }
+ul,ol{ list-style:none; }
+
+body{
+  min-height:100dvh;
+  background:var(--white,#fff);
+  color:var(--ink);
+  font-family:var(--font-b);
+  font-size:17px; line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+}
+@media (min-width:768px){ body{ font-size:17.5px; } }
+
+::selection{ background:var(--tint); color:var(--forest-900); }
+:where(a,button):focus-visible{ outline:2px solid var(--forest); outline-offset:2px; border-radius:4px; }
+
+.wrap{ width:100%; max-width:800px; margin-inline:auto; padding-inline:var(--gutter); }
+
+/* --- Kopf --- */
+.site-header{ background:#fff; border-bottom:1px solid var(--line); }
+.site-header__inner{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  min-height:66px; padding-block:10px; max-width:800px; margin-inline:auto;
+  padding-inline:var(--gutter);
+}
+.brand{ display:flex; flex-direction:column; justify-content:center; min-height:44px; text-decoration:none; }
+.brand__name{
+  font-family:var(--font-h); font-weight:700; font-size:clamp(14px,3.6vw,18px);
+  line-height:1.2; letter-spacing:-0.02em; color:var(--forest);
+}
+.brand__place{
+  margin-top:3px; font-size:clamp(10px,2.6vw,11px); font-weight:600; line-height:1.2;
+  letter-spacing:.12em; text-transform:uppercase; color:var(--forest);
+}
+.back-link{
+  flex:none; display:inline-flex; align-items:center; gap:8px;
+  min-height:44px; padding:10px clamp(12px,3vw,18px);
+  font-family:var(--font-h); font-weight:600; font-size:clamp(13px,3.2vw,14.5px);
+  color:#fff; background:var(--wine); border-radius:var(--r-sm);
+  text-decoration:none; white-space:nowrap;
+  transition:background-color var(--dur) var(--ease);
+}
+.back-link:hover{ background:var(--wine-900); }
+.back-link svg{ flex:none; }
+
+/* --- Inhalt --- */
+.legal{ padding-block:clamp(40px,6vw,72px) clamp(56px,8vw,96px); }
+.legal h1{
+  font-family:var(--font-h); font-weight:700; letter-spacing:-0.02em;
+  font-size:clamp(1.9rem,5vw,2.75rem); line-height:1.12; color:var(--forest-900);
+  text-wrap:balance;
+}
+.legal .intro{ margin-top:var(--s3); color:var(--ink-600); font-size:1.0625rem; }
+
+.legal h2{
+  font-family:var(--font-h); font-weight:600; letter-spacing:-0.015em;
+  font-size:clamp(1.2rem,2.6vw,1.4375rem); line-height:1.25; color:var(--forest);
+  margin-top:var(--s6); padding-top:var(--s4); border-top:1px solid var(--line);
+  text-wrap:balance;
+}
+.legal h3{
+  font-family:var(--font-h); font-weight:600; font-size:1.0625rem; line-height:1.35;
+  letter-spacing:-0.01em; color:var(--forest-900); margin-top:var(--s4);
+}
+.legal h2 + h3{ margin-top:var(--s3); }
+.legal p{ margin-top:var(--s2); max-width:68ch; }
+.legal h2 + p, .legal h3 + p{ margin-top:var(--s2); }
+
+.legal a{ color:var(--wine); text-underline-offset:3px; text-decoration-thickness:1px; }
+.legal a:hover{ color:var(--wine-900); }
+
+.legal ul{ margin-top:var(--s2); max-width:68ch; display:grid; gap:10px; }
+.legal ul li{ position:relative; padding-left:22px; }
+.legal ul li::before{
+  content:""; position:absolute; left:4px; top:.66em;
+  width:6px; height:6px; border-radius:50%; background:var(--forest);
+}
+
+/* Anschriften und Kennziffern */
+.legal .adr{
+  margin-top:var(--s3); padding:var(--s3) var(--s4);
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
+  font-style:normal; line-height:1.65;
+}
+.legal .adr strong{ font-family:var(--font-h); font-weight:600; color:var(--forest-900); }
+.legal dl{ margin-top:var(--s3); display:grid; gap:2px 20px; }
+@media (min-width:560px){ .legal dl{ grid-template-columns:auto 1fr; } }
+.legal dt{ font-weight:600; color:var(--forest-900); }
+.legal dd{ color:var(--ink-600); }
+@media (max-width:559px){ .legal dd{ margin-bottom:10px; } }
+
+/* Hinweis, den der Betreiber selbst prüfen muss */
+.legal .note{
+  margin-top:var(--s4); padding:var(--s3);
+  background:var(--tint); border:1px solid #D2E4A6; border-radius:var(--r-lg);
+  font-size:.9375rem; line-height:1.6;
+}
+
+/* --- Fuß --- */
+.site-footer{
+  border-top:1px solid var(--line); background:#fff;
+  padding-block:var(--s5);
+  font-size:.875rem; color:var(--ink-600);
+}
+.site-footer__inner{
+  max-width:800px; margin-inline:auto; padding-inline:var(--gutter);
+  display:flex; flex-direction:column; gap:var(--s2);
+}
+@media (min-width:768px){
+  .site-footer__inner{ flex-direction:row; align-items:center; justify-content:space-between; }
+}
+.site-footer nav{ display:flex; flex-wrap:wrap; gap:var(--s3); }
+.site-footer a{
+  display:inline-flex; align-items:center; min-height:44px;
+  color:var(--ink-600); text-decoration:none;
+  transition:color var(--dur) var(--ease);
+}
+.site-footer a:hover{ color:var(--forest); box-shadow:inset 0 -1px 0 currentColor; }
+.site-footer a[aria-current="page"]{ color:var(--forest); font-weight:600; }
