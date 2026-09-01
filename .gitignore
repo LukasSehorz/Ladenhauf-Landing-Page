@@ -4,3 +4,10 @@
 # Dient nur als Quelle fuer den Web-Encode und wird nicht ausgeliefert.
 # Ausgeliefert wird video/kurmittelhaus-team-720p.mp4 (~29 MB).
 video/kurmittelhaus-team.mp4
+
+# Geheimnisse und lokale Netlify-Artefakte. Der Resend-Key gehoert
+# ausschliesslich in die Netlify-Umgebungsvariablen.
+.env
+.env.*
+.netlify/
+node_modules/

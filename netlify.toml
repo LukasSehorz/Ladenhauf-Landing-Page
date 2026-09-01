@@ -1,0 +1,33 @@
+# Statische Seite ohne Build-Schritt. Netlify lädt die Dateien aus dem
+# Projektwurzelverzeichnis hoch und bündelt die Functions daneben.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+  # Kein Build-Prozess: alles liegt fertig im Repository.
+  command = ""
+
+[functions]
+  # Node 18+ bringt fetch global mit, deshalb kommt die Function ohne
+  # Abhängigkeiten und ohne package.json aus.
+  node_bundler = "esbuild"
+
+# Das Verzeichnis liegt innerhalb von publish und würde sonst als statische
+# Datei mit ausgeliefert. Der Quelltext enthält zwar kein Geheimnis, muss aber
+# trotzdem nicht öffentlich abrufbar sein.
+[[redirects]]
+  from = "/netlify/*"
+  to = "/index.html"
+  status = 404
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Selbst gehostete Schriften dürfen lange im Cache bleiben, ihr Inhalt ändert sich nicht.
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

@@ -1303,8 +1303,76 @@ p{ overflow-wrap:break-word; }
 (function () {
   'use strict';
 
-  /* === HIER ENDPOINT EINTRAGEN (Zapier/Make/Formspree/eigenes Backend) === */
-  const FORM_ENDPOINT = ""; // leer = Demo-Modus, zeigt nur die Erfolgsmeldung
+  /* Netlify Function, die die Bewerbung per Resend als E-Mail zustellt. */
+  const FORM_ENDPOINT = "/.netlify/functions/bewerbung";
+
+  /* ============================================================
+     META PIXEL — nur nach ausdrücklicher Einwilligung
+     ============================================================
+     § 25 Abs. 1 TTDSG verlangt eine aktive Einwilligung, bevor der Pixel
+     Daten an Meta senden darf. Ohne gespeicherte Zustimmung wird der
+     Basiscode gar nicht erst nachgeladen, es geht also keine einzige
+     Anfrage an connect.facebook.net.
+
+     Solange kein Einwilligungsdialog existiert, kann niemand zustimmen,
+     der Pixel bleibt damit dauerhaft inaktiv. Der Dialog ruft später
+     schlicht window.kmhConsent.grant() beziehungsweise .deny() auf.
+
+     Der Mailversand hängt davon nicht ab und funktioniert immer. */
+  const PIXEL_ID = '1088297220442492';
+  const CONSENT_KEY = 'kmh-consent-marketing';
+
+  function readConsent() {
+    try { return window.localStorage.getItem(CONSENT_KEY); }
+    catch (e) { return null; } // Privater Modus oder blockierte Speicherung
+  }
+
+  function loadPixel() {
+    if (window.fbq) return;
+    /* Basiscode von Meta, unverändert übernommen. */
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    window.fbq('init', PIXEL_ID);
+    window.fbq('track', 'PageView');
+  }
+
+  window.kmhConsent = {
+    status: readConsent,
+    grant: function () {
+      try { window.localStorage.setItem(CONSENT_KEY, 'granted'); } catch (e) {}
+      loadPixel();
+    },
+    deny: function () {
+      try { window.localStorage.setItem(CONSENT_KEY, 'denied'); } catch (e) {}
+    }
+  };
+
+  if (readConsent() === 'granted') loadPixel();
+
+  /* Feuert ein Pixel-Ereignis, sofern eingewilligt wurde. Ohne Einwilligung
+     existiert fbq nicht, deshalb der Typcheck statt eines try/catch. */
+  function trackEvent(name, params, eventID) {
+    if (typeof window.fbq !== 'function') return;
+    window.fbq('track', name, params, { eventID: eventID });
+  }
+
+  /* Eigene ID je Absendung, damit die Conversions API später deduplizieren
+     kann. randomUUID gibt es nur in sicheren Kontexten, daher der Rückfall. */
+  function neueEventId() {
+    try {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID();
+      }
+    } catch (e) {}
+    return 'ev-' + Date.now().toString(36) + '-' +
+           Math.random().toString(36).slice(2, 10);
+  }
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1455,8 +1523,13 @@ p{ overflow-wrap:break-word; }
     try { successBox.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' }); } catch (e) { successBox.scrollIntoView(); }
   }
 
+  /* Sperre gegen Doppelabsendung. Der Button wird zwar deaktiviert, per
+     Enter-Taste käme sonst aber trotzdem ein zweiter Submit durch. */
+  let isSubmitting = false;
+
   form.addEventListener('submit', function (event) {
     event.preventDefault();
+    if (isSubmitting) return;
     formError.classList.remove('show');
 
     let firstInvalid = null;
@@ -1477,6 +1550,9 @@ p{ overflow-wrap:break-word; }
       return;
     }
 
+    // Eine ID je Absendung, die Function protokolliert sie mit.
+    const eventID = neueEventId();
+
     const payload = {
       vorname:     form.elements['vorname'].value.trim(),
       nachname:    form.elements['nachname'].value.trim(),
@@ -1486,18 +1562,15 @@ p{ overflow-wrap:break-word; }
       erfahrung:   form.elements['erfahrung'].value,
       ort:         form.elements['ort'].value.trim(),
       nachricht:   form.elements['nachricht'].value.trim(),
+      webseite:    form.elements['webseite'] ? form.elements['webseite'].value : '',
       datenschutz: form.elements['datenschutz'].checked,
       quelle:      'Landingpage Ergotherapie',
-      gesendet_am: new Date().toISOString()
+      gesendet_am: new Date().toISOString(),
+      eventID:     eventID
     };
 
+    isSubmitting = true;
     setLoading(true);
-
-    if (!FORM_ENDPOINT) {
-      // Demo-Modus
-      window.setTimeout(function () { setLoading(false); showSuccess(); }, 800);
-      return;
-    }
 
     fetch(FORM_ENDPOINT, {
       method: 'POST',
@@ -1507,7 +1580,15 @@ p{ overflow-wrap:break-word; }
       if (!res.ok) throw new Error('HTTP ' + res.status);
       setLoading(false);
       showSuccess();
+      // Erst jetzt, nach bestätigtem 2xx. Nicht beim Klick, nicht beim Submit.
+      trackEvent('Lead', {
+        content_name: 'Ergotherapeut:in Kurmittelhaus Bad Reichenhall',
+        content_category: 'Bewerbung'
+      }, eventID);
     }).catch(function () {
+      // Nur hier wieder freigeben. Nach Erfolg bleibt das Formular gesperrt,
+      // damit dieselbe Bewerbung nicht ein zweites Mal rausgeht.
+      isSubmitting = false;
       setLoading(false);
       formError.classList.add('show');
     });
