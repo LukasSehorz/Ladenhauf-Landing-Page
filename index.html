@@ -1307,18 +1307,24 @@ p{ overflow-wrap:break-word; }
   const FORM_ENDPOINT = "/.netlify/functions/bewerbung";
 
   /* ============================================================
-     META PIXEL — nur nach ausdrücklicher Einwilligung
+     META PIXEL
      ============================================================
-     § 25 Abs. 1 TTDSG verlangt eine aktive Einwilligung, bevor der Pixel
-     Daten an Meta senden darf. Ohne gespeicherte Zustimmung wird der
-     Basiscode gar nicht erst nachgeladen, es geht also keine einzige
-     Anfrage an connect.facebook.net.
+     PIXEL_REQUIRES_CONSENT steuert, ob vor dem Laden eine Einwilligung
+     vorliegen muss.
 
-     Solange kein Einwilligungsdialog existiert, kann niemand zustimmen,
-     der Pixel bleibt damit dauerhaft inaktiv. Der Dialog ruft später
-     schlicht window.kmhConsent.grant() beziehungsweise .deny() auf.
+     Aktuell auf false: das Pixel lädt direkt beim Seitenaufruf, damit
+     sich Events schon in der Testphase prüfen lassen.
+
+     >>> VOR DEM GO-LIVE auf true setzen. <<<
+     § 25 Abs. 1 TTDSG verlangt eine aktive Einwilligung, bevor der Pixel
+     Daten an Meta senden darf. Mit true wird der Basiscode erst geholt,
+     wenn eine Zustimmung gespeichert ist, vorher geht keine einzige
+     Anfrage an connect.facebook.net. Ein Einwilligungsdialog ruft dafür
+     window.kmhConsent.grant() beziehungsweise .deny() auf.
 
      Der Mailversand hängt davon nicht ab und funktioniert immer. */
+  const PIXEL_REQUIRES_CONSENT = false;
+
   const PIXEL_ID = '1088297220442492';
   const CONSENT_KEY = 'kmh-consent-marketing';
 
@@ -1353,7 +1359,7 @@ p{ overflow-wrap:break-word; }
     }
   };
 
-  if (readConsent() === 'granted') loadPixel();
+  if (!PIXEL_REQUIRES_CONSENT || readConsent() === 'granted') loadPixel();
 
   /* Feuert ein Pixel-Ereignis, sofern eingewilligt wurde. Ohne Einwilligung
      existiert fbq nicht, deshalb der Typcheck statt eines try/catch. */
