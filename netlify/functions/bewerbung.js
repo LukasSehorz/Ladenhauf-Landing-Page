@@ -21,8 +21,6 @@ const CONFIRM_REPLY_TO = 'lukas.sehorz@svhconsult.de';
 
 /** Zusage aus der Landingpage. Ändert sie sich dort, muss sie hier mit. */
 const ANTWORTZEIT = '24 Stunden';
-const TELEFON = '08651 762330';
-const TELEFON_HREF = '+498651762330';
 
 /** Obergrenze je Feld. Alles darüber wird abgeschnitten. */
 const MAX_LEN = 2000;
@@ -222,15 +220,9 @@ function buildConfirmHtml(values) {
           'Kurmittelhaus der Moderne in Bad Reichenhall.' +
         '</p>' +
 
-        '<p style="margin:0 0 16px;color:#1A1714;font:400 16px/1.7 ' + FONT_STACK + ';">' +
-          'Wir melden uns innerhalb von <strong style="color:#7F191C;">' + ANTWORTZEIT + '</strong> ' +
-          'bei dir – per E-Mail oder telefonisch, ganz wie es dir lieber ist.' +
-        '</p>' +
-
         '<p style="margin:0 0 24px;color:#1A1714;font:400 16px/1.7 ' + FONT_STACK + ';">' +
-          'Falls du vorher Fragen hast, ruf einfach an: ' +
-          '<a href="tel:' + TELEFON_HREF + '" ' +
-             'style="color:#7F191C;font-weight:600;text-decoration:none;">' + TELEFON + '</a>' +
+          'Wir melden uns innerhalb von <strong style="color:#7F191C;">' + ANTWORTZEIT + '</strong> ' +
+          'bei dir.' +
         '</p>' +
 
         '<p style="margin:0 0 4px;color:#1A1714;font:400 16px/1.7 ' + FONT_STACK + ';">' +
@@ -256,10 +248,7 @@ function buildConfirmText(values) {
     'danke für deine Kurzbewerbung als Ergotherapeut:in bei uns im',
     'Kurmittelhaus der Moderne in Bad Reichenhall.',
     '',
-    'Wir melden uns innerhalb von ' + ANTWORTZEIT + ' bei dir – per E-Mail oder',
-    'telefonisch, ganz wie es dir lieber ist.',
-    '',
-    'Falls du vorher Fragen hast, ruf einfach an: ' + TELEFON,
+    'Wir melden uns innerhalb von ' + ANTWORTZEIT + ' bei dir.',
     '',
     'Bis gleich',
     'Dein Team vom Kurmittelhaus der Moderne',
