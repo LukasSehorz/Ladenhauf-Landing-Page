@@ -1247,6 +1247,15 @@ p{ overflow-wrap:break-word; }
                 <input type="text" id="webseite" name="webseite" tabindex="-1" autocomplete="off">
               </div>
 
+              <!-- Herkunft der Bewerbung. Wird beim Laden per JS gefuellt und
+                   nur in der internen Benachrichtigung ausgewertet. -->
+              <input type="hidden" name="utm_source" value="">
+              <input type="hidden" name="utm_medium" value="">
+              <input type="hidden" name="utm_campaign" value="">
+              <input type="hidden" name="utm_content" value="">
+              <input type="hidden" name="fbclid" value="">
+              <input type="hidden" name="referrer" value="">
+
               <div class="field consent" id="f-datenschutz">
                 <div class="consent__row">
                   <input type="checkbox" id="datenschutz" name="datenschutz" required aria-describedby="e-datenschutz">
@@ -1455,6 +1464,60 @@ p{ overflow-wrap:break-word; }
   const submitBtn = document.getElementById('submit-btn');
   const formError = document.getElementById('form-error');
 
+  /* ---------- Herkunft ----------
+     Die Kampagnenparameter stehen nur beim ersten Aufruf in der URL. Wer die
+     Seite verlaesst und spaeter direkt zurueckkommt, um sich dann zu bewerben,
+     haette sonst keine Herkunft mehr. Deshalb wandern die Werte beim ersten
+     Aufruf in den sessionStorage und werden von dort gelesen, solange die URL
+     nichts Neues mitbringt. Ein erneuter Anzeigenklick ueberschreibt sie. */
+  const HERKUNFT_FELDER = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'fbclid'];
+  const HERKUNFT_KEY = 'kmh-herkunft';
+  const HERKUNFT_MAX = 200;
+
+  function kappen(wert) {
+    return String(wert === null || wert === undefined ? '' : wert).trim().slice(0, HERKUNFT_MAX);
+  }
+
+  function herkunftErmitteln() {
+    let gespeichert = null;
+    try {
+      const roh = sessionStorage.getItem(HERKUNFT_KEY);
+      if (roh) gespeichert = JSON.parse(roh);
+    } catch (e) { /* privater Modus o.ae.: dann eben ohne Gedaechtnis */ }
+    if (!gespeichert || typeof gespeichert !== 'object') gespeichert = null;
+
+    const params = new URLSearchParams(location.search);
+    const ausUrl = {};
+    let urlHatWerte = false;
+    HERKUNFT_FELDER.forEach(function (name) {
+      ausUrl[name] = kappen(params.get(name));
+      if (ausUrl[name]) urlHatWerte = true;
+    });
+
+    const werte = {};
+    HERKUNFT_FELDER.forEach(function (name) {
+      werte[name] = urlHatWerte ? ausUrl[name] : kappen(gespeichert ? gespeichert[name] : '');
+    });
+
+    if (gespeichert) {
+      werte.referrer = kappen(gespeichert.referrer);
+    } else {
+      // Nur beim ersten Aufruf brauchbar. Spaeter zeigt document.referrer auf
+      // die eigene Seite, das waere kein Verweis von aussen.
+      const ref = kappen(document.referrer);
+      werte.referrer = (ref && ref.indexOf(location.origin) !== 0) ? ref : '';
+    }
+
+    try { sessionStorage.setItem(HERKUNFT_KEY, JSON.stringify(werte)); } catch (e) {}
+    return werte;
+  }
+
+  const herkunft = herkunftErmitteln();
+  Object.keys(herkunft).forEach(function (name) {
+    const feld = form.elements[name];
+    if (feld) feld.value = herkunft[name];
+  });
+
   const RULES = {
     vorname:     function (v) { return v.trim().length >= 2; },
     nachname:    function (v) { return v.trim().length >= 2; },
@@ -1574,6 +1637,14 @@ p{ overflow-wrap:break-word; }
       gesendet_am: new Date().toISOString(),
       eventID:     eventID
     };
+
+    // Herkunft aus den versteckten Feldern lesen, nicht aus der Variablen:
+    // so geht auch mit, was ein spaeterer Aufruf dort eingetragen hat.
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'fbclid', 'referrer']
+      .forEach(function (name) {
+        const feld = form.elements[name];
+        payload[name] = feld ? feld.value : '';
+      });
 
     isSubmitting = true;
     setLoading(true);

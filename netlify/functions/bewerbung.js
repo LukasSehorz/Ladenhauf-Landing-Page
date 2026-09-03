@@ -37,6 +37,17 @@ const FIELDS = [
   { key: 'nachricht', label: 'Nachricht',          required: false, multiline: true }
 ];
 
+/**
+ * Herkunftsdaten aus den versteckten Feldern des Formulars. Niemals Pflicht:
+ * eine Bewerbung ohne Kampagnendaten ist eine ganz normale Bewerbung.
+ */
+const HERKUNFT_FELDER = [
+  'utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'fbclid', 'referrer'
+];
+
+/** Kurze Obergrenze, die Werte sind Kampagnenkürzel und keine Fließtexte. */
+const HERKUNFT_MAX = 200;
+
 /** Name des Honeypot-Felds im Formular. Menschen sehen es nicht. */
 const HONEYPOT = 'webseite';
 
@@ -111,6 +122,29 @@ function json(statusCode, body) {
   };
 }
 
+/**
+ * Baut die Herkunftszeilen für die interne Mail.
+ *
+ *   Herkunft: 04-arbeiten-wo-andere-urlaub-machen · fb / feed
+ *   Kampagne: LS | 01.09.2026 | Bewerbungen Ergotherapie | Anthojo
+ *
+ * Ohne Kampagnendaten steht dort "direkt / unbekannt" – eine leere Zeile
+ * liesse offen, ob die Herkunft fehlt oder die Auswertung kaputt ist.
+ */
+function herkunftZeilen(herkunft) {
+  const teile = [];
+  if (herkunft.utm_content) teile.push(herkunft.utm_content);
+
+  const quelle = [herkunft.utm_source, herkunft.utm_medium].filter(Boolean).join(' / ');
+  if (quelle) teile.push(quelle);
+
+  const zeilen = ['Herkunft: ' + (teile.length ? teile.join(' · ') : 'direkt / unbekannt')];
+  if (herkunft.utm_campaign) zeilen.push('Kampagne: ' + herkunft.utm_campaign);
+  if (herkunft.fbclid) zeilen.push('Klick-ID: ' + herkunft.fbclid);
+  if (herkunft.referrer) zeilen.push('Verweis: ' + herkunft.referrer);
+  return zeilen;
+}
+
 function buildHtml(values, meta) {
   const rows = FIELDS.map(function (f) {
     const raw = values[f.key];
@@ -162,6 +196,16 @@ function buildHtml(values, meta) {
           'Datenschutz bestätigt: ' + (meta.datenschutz ? 'ja' : 'nein') + '<br>' +
           'Quelle: ' + escapeHtml(meta.quelle) +
         '</p>' +
+
+        // Herkunft bewusst als eigener Block: beim Überfliegen soll sofort
+        // klar sein, aus welcher Anzeige die Bewerbung kommt.
+        '<div style="margin-top:16px;padding:12px 14px;background:#FAF7F0;' +
+                    'border:1px solid #E7E2D5;border-radius:10px;">' +
+          '<p style="margin:0;color:#5C554A;word-break:break-word;' +
+                    'font:400 13px/1.7 SFMono-Regular,Consolas,monospace;">' +
+            herkunftZeilen(meta.herkunft).map(escapeHtml).join('<br>') +
+          '</p>' +
+        '</div>' +
       '</div>' +
     '</body></html>';
 }
@@ -181,6 +225,9 @@ function buildText(values, meta) {
   lines.push('Eingegangen am ' + meta.zeit);
   lines.push('Datenschutz bestätigt: ' + (meta.datenschutz ? 'ja' : 'nein'));
   lines.push('Quelle: ' + meta.quelle);
+  lines.push('');
+  lines.push('--');
+  herkunftZeilen(meta.herkunft).forEach(function (zeile) { lines.push(zeile); });
   return lines.join('\n');
 }
 
@@ -328,10 +375,18 @@ exports.handler = async function (event) {
     return json(500, { ok: false, error: 'send_failed' });
   }
 
+  // Herkunft erst nach der Validierung: sie darf nie darüber entscheiden,
+  // ob eine Bewerbung angenommen wird.
+  const herkunft = {};
+  HERKUNFT_FELDER.forEach(function (name) {
+    herkunft[name] = clean(data[name], false).slice(0, HERKUNFT_MAX);
+  });
+
   const meta = {
     zeit: berlinTimestamp(new Date()),
     datenschutz: data.datenschutz === true,
-    quelle: clean(data.quelle, false) || 'Landingpage Ergotherapie'
+    quelle: clean(data.quelle, false) || 'Landingpage Ergotherapie',
+    herkunft: herkunft
   };
 
   // 1. Interne Benachrichtigung. Nur dieser Schritt entscheidet über den Status,
