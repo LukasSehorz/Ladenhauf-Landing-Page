@@ -2,7 +2,7 @@
 
 /**
  * Nimmt die Kurzbewerbung der Landing Page entgegen und stellt sie per Resend
- * als E-Mail zu.
+ * als E-Mail zu. Danach geht eine Bestätigung an die bewerbende Person raus.
  *
  * Bewusst ohne npm-Abhängigkeiten: Node 18+ bringt fetch mit, dadurch bleibt
  * die Function ohne package.json und ohne Build-Schritt deploybar.
@@ -14,6 +14,15 @@
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 const MAIL_FROM = 'Bewerbungen Kurmittelhaus <bewerbung@svhconsult.de>';
 const MAIL_TO = 'lukas.sehorz@svhconsult.de';
+
+/** Bestätigung an die bewerbende Person. Antworten landen beim Team. */
+const CONFIRM_FROM = 'Kurmittelhaus der Moderne <bewerbung@svhconsult.de>';
+const CONFIRM_REPLY_TO = 'lukas.sehorz@svhconsult.de';
+
+/** Zusage aus der Landingpage. Ändert sie sich dort, muss sie hier mit. */
+const ANTWORTZEIT = '24 Stunden';
+const TELEFON = '08651 762330';
+const TELEFON_HREF = '+498651762330';
 
 /** Obergrenze je Feld. Alles darüber wird abgeschnitten. */
 const MAX_LEN = 2000;
@@ -177,6 +186,111 @@ function buildText(values, meta) {
   return lines.join('\n');
 }
 
+/* ------------------------------------------------------------------
+   Bestätigung an die bewerbende Person
+
+   Bewusst schlicht gehalten: Tabellenlayout und Inline-Styles, weil
+   Outlook nichts anderes zuverlässig rendert. Lexend und Open Sans
+   stehen nur als Wunsch im Font-Stack, geladen wird in E-Mails nichts –
+   deshalb steht dahinter eine vollständige Systemschrift-Kette.
+   Keine Anhänge, kein Tracking-Pixel.
+   ------------------------------------------------------------------ */
+
+const FONT_STACK = "Lexend,'Open Sans',-apple-system,Segoe UI,Arial,sans-serif";
+
+function buildConfirmHtml(values) {
+  const vorname = escapeHtml(values.vorname);
+
+  return '' +
+    '<!doctype html><html lang="de"><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Deine Bewerbung ist angekommen</title></head>' +
+    '<body style="margin:0;padding:24px;background:#FAF7F0;">' +
+      '<div style="max-width:560px;margin:0 auto;background:#ffffff;border:1px solid #E7E2D5;' +
+                  'border-radius:16px;padding:32px;">' +
+
+        '<h1 style="margin:0 0 20px;color:#7F191C;font:600 22px/1.35 ' + FONT_STACK + ';">' +
+          'Deine Bewerbung ist angekommen' +
+        '</h1>' +
+
+        '<p style="margin:0 0 16px;color:#1A1714;font:400 16px/1.7 ' + FONT_STACK + ';">' +
+          'Hallo ' + vorname + ',' +
+        '</p>' +
+
+        '<p style="margin:0 0 16px;color:#1A1714;font:400 16px/1.7 ' + FONT_STACK + ';">' +
+          'danke für deine Kurzbewerbung als Ergotherapeut:in bei uns im ' +
+          'Kurmittelhaus der Moderne in Bad Reichenhall.' +
+        '</p>' +
+
+        '<p style="margin:0 0 16px;color:#1A1714;font:400 16px/1.7 ' + FONT_STACK + ';">' +
+          'Wir melden uns innerhalb von <strong style="color:#7F191C;">' + ANTWORTZEIT + '</strong> ' +
+          'bei dir – per E-Mail oder telefonisch, ganz wie es dir lieber ist.' +
+        '</p>' +
+
+        '<p style="margin:0 0 24px;color:#1A1714;font:400 16px/1.7 ' + FONT_STACK + ';">' +
+          'Falls du vorher Fragen hast, ruf einfach an: ' +
+          '<a href="tel:' + TELEFON_HREF + '" ' +
+             'style="color:#7F191C;font-weight:600;text-decoration:none;">' + TELEFON + '</a>' +
+        '</p>' +
+
+        '<p style="margin:0 0 4px;color:#1A1714;font:400 16px/1.7 ' + FONT_STACK + ';">' +
+          'Bis gleich' +
+        '</p>' +
+        '<p style="margin:0;color:#17330F;font:600 16px/1.7 ' + FONT_STACK + ';">' +
+          'Dein Team vom Kurmittelhaus der Moderne' +
+        '</p>' +
+
+        '<hr style="border:0;border-top:1px solid #E7E2D5;margin:28px 0 16px;">' +
+        '<p style="margin:0;color:#5C554A;font:400 13px/1.6 ' + FONT_STACK + ';">' +
+          'Deine Angaben nutzen wir ausschließlich für diese Bewerbung.' +
+        '</p>' +
+
+      '</div>' +
+    '</body></html>';
+}
+
+function buildConfirmText(values) {
+  return [
+    'Hallo ' + values.vorname + ',',
+    '',
+    'danke für deine Kurzbewerbung als Ergotherapeut:in bei uns im',
+    'Kurmittelhaus der Moderne in Bad Reichenhall.',
+    '',
+    'Wir melden uns innerhalb von ' + ANTWORTZEIT + ' bei dir – per E-Mail oder',
+    'telefonisch, ganz wie es dir lieber ist.',
+    '',
+    'Falls du vorher Fragen hast, ruf einfach an: ' + TELEFON,
+    '',
+    'Bis gleich',
+    'Dein Team vom Kurmittelhaus der Moderne',
+    '',
+    'Deine Angaben nutzen wir ausschließlich für diese Bewerbung.'
+  ].join('\n');
+}
+
+/**
+ * Schickt eine Mail über Resend. Wirft bei Netzwerkfehlern und bei jeder
+ * Antwort außerhalb von 2xx, damit beide Fälle oben gleich behandelt werden.
+ */
+async function sendMail(apiKey, payload) {
+  const res = await fetch(RESEND_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const detail = await res.text().catch(function () { return '<Antwort nicht lesbar>'; });
+    // Nur ins Function-Log. Der Client erfaehrt bewusst keine Details.
+    throw new Error('Resend hat abgelehnt. HTTP ' + res.status + ' ' + detail);
+  }
+
+  return await res.json().catch(function () { return {}; });
+}
+
 exports.handler = async function (event) {
   if (event.httpMethod !== 'POST') {
     return json(405, { ok: false, error: 'method_not_allowed' });
@@ -231,39 +345,43 @@ exports.handler = async function (event) {
     quelle: clean(data.quelle, false) || 'Landingpage Ergotherapie'
   };
 
-  const payload = {
-    from: MAIL_FROM,
-    to: [MAIL_TO],
-    reply_to: values.email,
-    subject: 'Neue Bewerbung Ergotherapie – ' + values.vorname + ' ' + values.nachname,
-    html: buildHtml(values, meta),
-    text: buildText(values, meta)
-  };
-
+  // 1. Interne Benachrichtigung. Nur dieser Schritt entscheidet über den Status,
+  //    denn er ist die eigentliche Zustellung der Bewerbung.
   try {
-    const res = await fetch(RESEND_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + apiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
+    const result = await sendMail(apiKey, {
+      from: MAIL_FROM,
+      to: [MAIL_TO],
+      reply_to: values.email,
+      subject: 'Neue Bewerbung Ergotherapie – ' + values.vorname + ' ' + values.nachname,
+      html: buildHtml(values, meta),
+      text: buildText(values, meta)
     });
-
-    if (!res.ok) {
-      const detail = await res.text().catch(function () { return '<Antwort nicht lesbar>'; });
-      // Nur ins Function-Log. Der Client erfaehrt bewusst keine Details.
-      console.error('Resend hat abgelehnt. HTTP ' + res.status + ' ' + detail);
-      return json(500, { ok: false, error: 'send_failed' });
-    }
-
-    const result = await res.json().catch(function () { return {}; });
     console.log('Bewerbung zugestellt. resendId=' + (result.id || 'unbekannt') +
                 ' eventID=' + (eventID || 'keine'));
-    return json(200, { ok: true });
-
   } catch (err) {
-    console.error('Resend nicht erreichbar: ' + (err && err.message ? err.message : err));
+    console.error('Bewerbung nicht zugestellt: ' + (err && err.message ? err.message : err));
     return json(500, { ok: false, error: 'send_failed' });
   }
+
+  // 2. Bestätigung an die bewerbende Person. Scheitert sie, ist die Bewerbung
+  //    trotzdem angekommen – also 200 und der Fehler nur ins Log. Sonst sähe
+  //    jemand eine Fehlermeldung und bewirbt sich ein zweites Mal.
+  try {
+    const confirm = await sendMail(apiKey, {
+      from: CONFIRM_FROM,
+      to: [values.email],
+      reply_to: CONFIRM_REPLY_TO,
+      subject: 'Deine Bewerbung ist angekommen – Kurmittelhaus der Moderne',
+      html: buildConfirmHtml(values),
+      text: buildConfirmText(values)
+    });
+    console.log('Bestaetigung zugestellt. resendId=' + (confirm.id || 'unbekannt') +
+                ' eventID=' + (eventID || 'keine'));
+  } catch (err) {
+    console.error('Bestaetigung nicht zugestellt (Bewerbung ist trotzdem da): ' +
+                  (err && err.message ? err.message : err) +
+                  ' eventID=' + (eventID || 'keine'));
+  }
+
+  return json(200, { ok: true });
 };
