@@ -3,6 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Google Tag Manager -->
+<!-- Bewusst als unveränderter Originalschnipsel und so weit oben wie
+     möglich. Die Container-ID muss wörtlich im ausgelieferten Quelltext
+     stehen, sonst schlägt die Inhaberschaftsbestätigung von Google fehl.
+     Also niemals per JavaScript nachladen oder die ID aus einer Variablen
+     zusammensetzen. -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-MFBQ5XH4');</script>
+<!-- End Google Tag Manager -->
+
 <meta name="robots" content="noindex, nofollow">
 <title>Ergotherapeut:in (m/w/d) beim Kurmittelhaus der Moderne in Bad Reichenhall</title>
 <meta name="description" content="Ergotherapeut:in (m/w/d) für das Kurmittelhaus der Moderne in Bad Reichenhall. Mit fester Pufferzeit zwischen den Behandlungen und bezahlter Dokumentationszeit. Teilzeit oder Vollzeit, 4-Tage-Woche möglich. In 60 Sekunden bewerben.">
@@ -786,6 +800,11 @@ p{ overflow-wrap:break-word; }
 </head>
 
 <body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MFBQ5XH4"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
 <a class="skip" href="#hauptinhalt">Zum Inhalt springen</a>
 
 <header class="site-header">
@@ -1662,6 +1681,18 @@ p{ overflow-wrap:break-word; }
         content_name: 'Ergotherapeut:in Kurmittelhaus Bad Reichenhall',
         content_category: 'Bewerbung'
       }, eventID);
+
+      /* Gegenstück für den Google Tag Manager: darauf lässt sich dort ein
+         Trigger bauen, ohne die Seite erneut anzufassen. dataLayer legt der
+         GTM-Schnipsel im Head an, die Zuweisung hier ist nur die Absicherung
+         für den Fall, dass ein Blocker ihn verhindert hat. Bewusst ohne
+         Namen, Adresse oder Telefonnummer. */
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'bewerbung_gesendet',
+        formular: 'Kurzbewerbung Ergotherapie',
+        eventID: eventID
+      });
     }).catch(function () {
       // Nur hier wieder freigeben. Nach Erfolg bleibt das Formular gesperrt,
       // damit dieselbe Bewerbung nicht ein zweites Mal rausgeht.
